@@ -27,7 +27,19 @@ const VoiceInput = ({ caseId, onUploadSuccess }) => {
             setIsRecording(true);
         } catch (error) {
             console.error("Error accessing microphone:", error);
-            alert("Please allow microphone permissions.");
+            if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                alert(
+                    "Microphone access was denied.\n\n" +
+                    "To fix this:\n" +
+                    "1. Click the 🔒 lock icon in your browser address bar\n" +
+                    "2. Set Microphone to 'Allow'\n" +
+                    "3. Refresh the page and try again"
+                );
+            } else if (error.name === 'NotFoundError') {
+                alert("No microphone found. Please connect a microphone and try again.");
+            } else {
+                alert("Could not access microphone: " + error.message);
+            }
         }
     };
 
@@ -44,40 +56,87 @@ const VoiceInput = ({ caseId, onUploadSuccess }) => {
         if (caseId) formData.append('caseId', caseId);
 
         try {
-            const { data } = await api.post('/voice/upload', formData, {
+            // Using the api instance directly with the correct endpoint
+            const { data } = await api.post('/voice/transcribe', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
+            
             setAudioBlob(null);
             if (onUploadSuccess) onUploadSuccess(data.transcription);
         } catch (error) {
             console.error("Voice upload failed:", error);
-            alert("Failed to transcribe audio.");
+            alert("Failed to transcribe audio. Please ensure Python server is running.");
         } finally {
             setIsUploading(false);
         }
     };
 
     return (
-        <div style={{ marginBottom: '1rem', padding: '1.5rem', background: 'rgba(255,255,255,0.5)', border: '1px solid var(--glass-border)', borderRadius: '12px' }}>
-            <h4 style={{ margin: '0 0 1rem 0' }}>Voice Recording</h4>
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
+            <h4 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                </svg>
+                Voice Recording
+            </h4>
+            
+            <div className="flex flex-wrap gap-4 items-center">
                 {!isRecording ? (
-                    <button className="btn-primary" onClick={startRecording}>Start Recording</button>
+                    <button 
+                        className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors shadow-sm shadow-blue-200 active:scale-95" 
+                        onClick={startRecording}
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Start Recording
+                    </button>
                 ) : (
-                    <button className="btn-primary" style={{ backgroundColor: '#EF4444' }} onClick={stopRecording}>Stop Recording</button>
+                    <button 
+                        className="flex items-center gap-2 px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-medium rounded-xl transition-colors shadow-sm shadow-red-200 active:scale-95 animate-pulse" 
+                        onClick={stopRecording}
+                    >
+                        <span className="w-3 h-3 bg-white rounded-sm"></span>
+                        Stop Recording
+                    </button>
                 )}
+
                 {audioBlob && (
                     <button 
-                        className="btn-primary" 
-                        style={{ backgroundColor: 'var(--secondary)' }} 
+                        className="flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-xl transition-colors shadow-sm shadow-emerald-200 disabled:opacity-70 disabled:cursor-not-allowed active:scale-95" 
                         onClick={handleUpload}
                         disabled={isUploading}
                     >
-                        {isUploading ? 'Transcribing...' : 'Upload & Transcribe'}
+                        {isUploading ? (
+                            <>
+                                <svg className="animate-spin w-5 h-5 text-white" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Transcribing...
+                            </>
+                        ) : (
+                            <>
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                                </svg>
+                                Upload & Transcribe
+                            </>
+                        )}
                     </button>
                 )}
             </div>
-            {isRecording && <p style={{ color: '#EF4444', marginTop: '1rem', animation: 'pulse 1.5s infinite' }}>● Recording...</p>}
+            
+            {isRecording && (
+                <div className="flex items-center gap-2 mt-4 text-red-500 font-medium">
+                    <span className="relative flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                    </span>
+                    Recording in progress...
+                </div>
+            )}
         </div>
     );
 };

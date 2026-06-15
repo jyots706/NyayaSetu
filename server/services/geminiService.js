@@ -1,21 +1,34 @@
-const { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-const getLegalDraft = async (caseDetails) => {
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+const getLegalGuidance = async (userQuery, language) => {
     try {
-        const model = new ChatGoogleGenerativeAI({
-            modelName: "gemini-1.5-pro-latest", // using a modern gemini model
-            maxOutputTokens: 2048,
-            apiKey: process.env.GEMINI_API_KEY
+        const systemInstruction = `You are a legal aid assistant for India, answer in ${language || 'English'} based on user language, provide rights, steps, and legal draft templates.`;
+        
+        const model = genAI.getGenerativeModel({ 
+            model: 'gemini-1.5-pro',
+            systemInstruction: systemInstruction 
         });
-        
-        const prompt = `You are an expert Indian lawyer. Please draft a legal summary and action plan for the following case:\n\nTitle: ${caseDetails.title}\nDescription: ${caseDetails.description}\nTranscribed Evidence: ${caseDetails.transcription || 'None'}`;
-        
-        const response = await model.invoke(prompt);
-        return response.content;
+
+        const result = await model.generateContent(userQuery);
+        return result.response.text();
     } catch (error) {
         console.error("Gemini AI Error:", error);
-        throw new Error("Failed to generate legal draft.");
+        throw new Error("Failed to get legal guidance.");
     }
 };
 
-module.exports = { getLegalDraft };
+const generateDocumentSummary = async (documentText) => {
+    try {
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+        const prompt = `Please provide a concise legal summary of the following document text:\n\n${documentText}`;
+        const result = await model.generateContent(prompt);
+        return result.response.text();
+    } catch (error) {
+        console.error("Gemini Summary Error:", error);
+        throw new Error("Failed to generate document summary.");
+    }
+};
+
+module.exports = { getLegalGuidance, generateDocumentSummary };

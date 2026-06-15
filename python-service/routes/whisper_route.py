@@ -2,35 +2,25 @@ from flask import Blueprint, request, jsonify
 import whisper
 import os
 
-whisper_bp = Blueprint('whisper', __name__)
+whisper_route = Blueprint('whisper_route', __name__)
+# Load small model as requested
+model = whisper.load_model("small")
 
-# Load model lazily to avoid heavy startup
-model = None
-
-@whisper_bp.route('/transcribe', methods=['POST'])
-def transcribe_audio():
-    global model
+@whisper_route.route('/transcribe', methods=['POST'])
+def transcribe():
     if 'audio' not in request.files:
         return jsonify({"error": "No audio file provided"}), 400
     
     audio_file = request.files['audio']
-    file_path = os.path.join('uploads', audio_file.filename)
-    audio_file.save(file_path)
+    temp_path = f"temp_{audio_file.filename}"
+    audio_file.save(temp_path)
     
     try:
-        if model is None:
-            print("Loading Whisper model...")
-            model = whisper.load_model("base")
-        
-        print(f"Transcribing audio: {file_path}")
-        result = model.transcribe(file_path)
-        
-        # Cleanup temp file
-        if os.path.exists(file_path):
-            os.remove(file_path)
-            
-        return jsonify({"transcription": result["text"], "status": "success"})
+        result = model.transcribe(temp_path)
+        transcript = result['text']
+        os.remove(temp_path)
+        return jsonify({"transcript": transcript})
     except Exception as e:
-        if os.path.exists(file_path):
-            os.remove(file_path)
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
         return jsonify({"error": str(e)}), 500

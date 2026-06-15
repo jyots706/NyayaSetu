@@ -7,16 +7,22 @@ const transcribeAudio = async (filePath) => {
         const formData = new FormData();
         formData.append('audio', fs.createReadStream(filePath));
 
-        const response = await axios.post(`${process.env.PYTHON_SERVICE_URL}/api/whisper/transcribe`, formData, {
+        const pythonUrl = process.env.PYTHON_SERVICE_URL || 'http://localhost:8000';
+        console.log(`📡 Calling Python Whisper at: ${pythonUrl}/transcribe`);
+        
+        const response = await axios.post(`${pythonUrl}/transcribe`, formData, {
             headers: {
                 ...formData.getHeaders()
-            }
+            },
+            timeout: 120000 // 2 minute timeout — Whisper can be slow on first run
         });
         
-        return response.data.transcription;
+        console.log('✅ Whisper response:', response.data);
+        return response.data.transcript;
     } catch (error) {
-        console.error("Whisper Service Error:", error.message);
-        throw new Error("Failed to transcribe audio.");
+        const errMsg = error.response?.data?.error || error.message;
+        console.error("❌ Whisper Service Error:", errMsg);
+        throw new Error("Whisper transcription failed: " + errMsg);
     }
 };
 

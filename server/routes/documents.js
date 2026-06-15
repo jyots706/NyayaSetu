@@ -1,17 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const upload = require('../middleware/uploadMiddleware');
+const { uploadDocument, getDocumentSummary } = require('../controllers/documentController');
 const { protect } = require('../middleware/authMiddleware');
-const { uploadDocument, getCaseDocuments } = require('../controllers/documentController');
-const { handleOcrProcess } = require('../controllers/ocrController');
+const upload = require('../middleware/uploadMiddleware');
 
-// Upload document
+// @route   POST /api/documents/upload
+// @desc    Upload a PDF document and process it
+// @access  Private
 router.post('/upload', protect, upload.single('document'), uploadDocument);
 
-// Get documents by case ID
-router.get('/:caseId', protect, getCaseDocuments);
-
-// Trigger OCR processing
-router.post('/ocr', protect, handleOcrProcess);
+// @route   GET /api/documents/summary/:id
+// @desc    Get summary of a specific document
+// @access  Private
+router.get('/summary/:id', protect, getDocumentSummary);
 
 module.exports = router;

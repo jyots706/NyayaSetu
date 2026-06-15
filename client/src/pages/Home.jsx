@@ -2,22 +2,39 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 const Home = () => {
-  return (
-    <div className="home-container" style={{ textAlign: 'center', marginTop: '10vh' }}>
-      <h1>Welcome to NyayaSetu</h1>
-      <p style={{ fontSize: '1.25rem', color: 'var(--text-muted)', marginBottom: '2rem' }}>
-        Bridging the gap between citizens and the legal system with AI-powered Voice and Document Analysis.
-      </p>
-      <div className="glass-card" style={{ maxWidth: '600px', margin: '0 auto' }}>
-        <h2>Get Started</h2>
-        <p>Login or create an account to start submitting cases.</p>
-        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '2rem' }}>
-          <Link to="/login"><button className="btn-primary">Login</button></Link>
-          <Link to="/register"><button className="btn-primary" style={{ backgroundColor: 'var(--secondary)' }}>Register</button></Link>
+    return (
+        <div className="min-h-screen bg-gray-50 flex flex-col items-center">
+            {/* Hero Section */}
+            <div className="w-full bg-blue-600 text-white py-20 px-4 text-center">
+                <h1 className="text-5xl font-extrabold mb-4">NyayaSetu</h1>
+                <p className="text-xl mb-2">Your AI-Powered Legal Aid Assistant</p>
+                <p className="text-lg text-blue-200 mb-8">आपका एआई-संचालित कानूनी सहायता सहायक</p>
+                <div className="flex justify-center space-x-4">
+                    <Link to="/login" className="bg-white text-blue-600 font-bold py-3 px-8 rounded-full shadow-lg hover:bg-blue-50 transition duration-300">Login</Link>
+                    <Link to="/register" className="bg-transparent border-2 border-white text-white font-bold py-3 px-8 rounded-full hover:bg-blue-700 transition duration-300">Register</Link>
+                </div>
+            </div>
+
+            {/* Features Section */}
+            <div className="max-w-6xl mx-auto py-16 px-4">
+                <h2 className="text-3xl font-bold text-center text-gray-800 mb-12">Key Features</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <FeatureCard title="Voice Input" description="Speak your query in Hindi or English, and let our AI transcribe and analyze it instantly." icon="🎤" />
+                    <FeatureCard title="Document Upload" description="Upload legal PDFs or images. Our system extracts text and provides a concise summary." icon="📄" />
+                    <FeatureCard title="AI Legal Help" description="Get instant guidance, know your rights, and access legal draft templates powered by Gemini AI." icon="⚖️" />
+                    <FeatureCard title="Language Support" description="Seamlessly switch between Hindi and English to ensure you understand every legal detail." icon="🌐" />
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 };
+
+const FeatureCard = ({ title, description, icon }) => (
+    <div className="bg-white p-6 rounded-xl shadow-md text-center hover:shadow-lg transition duration-300">
+        <div className="text-4xl mb-4">{icon}</div>
+        <h3 className="text-xl font-bold text-gray-800 mb-2">{title}</h3>
+        <p className="text-gray-600">{description}</p>
+    </div>
+);
 
 export default Home;

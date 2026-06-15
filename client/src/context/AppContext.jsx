@@ -1,42 +1,40 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 
-const AppContext = createContext();
+export const AppContext = createContext();
+
+export const useAppContext = () => useContext(AppContext);
 
 export const AppProvider = ({ children }) => {
     const [user, setUser] = useState(null);
-    const [language, setLanguage] = useState('en'); // Default to English
-    const [loading, setLoading] = useState(true);
+    const [token, setToken] = useState(localStorage.getItem('token') || null);
+    const [preferredLanguage, setPreferredLanguage] = useState('English');
 
     useEffect(() => {
-        // Check for logged in user in localStorage
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
+        if (token) {
+            localStorage.setItem('token', token);
+        } else {
+            localStorage.removeItem('token');
+            setUser(null);
         }
-        setLoading(false);
-    }, []);
+    }, [token]);
 
-    const login = (userData) => {
+    const login = (userData, jwtToken) => {
         setUser(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
-        localStorage.setItem('token', userData.token);
+        setToken(jwtToken);
     };
 
     const logout = () => {
         setUser(null);
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
+        setToken(null);
     };
 
-    const changeLanguage = (lang) => {
-        setLanguage(lang);
+    const setLanguage = (lang) => {
+        setPreferredLanguage(lang);
     };
 
     return (
-        <AppContext.Provider value={{ user, language, loading, login, logout, changeLanguage }}>
+        <AppContext.Provider value={{ user, token, preferredLanguage, login, logout, setLanguage }}>
             {children}
         </AppContext.Provider>
     );
 };
-
-export const useAppContext = () => useContext(AppContext);

@@ -1,48 +1,62 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useAppContext } from './context/AppContext';
+import { AppProvider, AppContext } from './context/AppContext';
+
+// Layouts
+import DashboardLayout from './layouts/DashboardLayout';
+
+// Public Pages
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
-import CaseSummary from './pages/CaseSummary';
-import './index.css';
 
-// Protected Route Wrapper
+// Protected Pages
+import Dashboard from './pages/Dashboard';
+import VoiceInputPage from './pages/VoiceInputPage';
+import DocumentUploadPage from './pages/DocumentUploadPage';
+import AILegalHelpPage from './pages/AILegalHelpPage';
+import SettingsPage from './pages/SettingsPage';
+
 const ProtectedRoute = ({ children }) => {
-    const { user, loading } = useAppContext();
-    if (loading) return <div className="loading-screen">Loading...</div>;
-    return user ? children : <Navigate to="/login" />;
+    const { token } = useContext(AppContext);
+    if (!token) {
+        return <Navigate to="/login" replace />;
+    }
+    return children;
+};
+
+const AppRoutes = () => {
+    return (
+        <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            
+            {/* Dashboard Routes with Layout */}
+            <Route path="/dashboard" element={
+                <ProtectedRoute>
+                    <DashboardLayout />
+                </ProtectedRoute>
+            }>
+                <Route index element={<Dashboard />} />
+                <Route path="voice" element={<VoiceInputPage />} />
+                <Route path="documents" element={<DocumentUploadPage />} />
+                <Route path="legal-help" element={<AILegalHelpPage />} />
+                <Route path="settings" element={<SettingsPage />} />
+            </Route>
+        </Routes>
+    );
 };
 
 function App() {
-  return (
-    <Router>
-      <div className="app-container">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route 
-            path="/dashboard" 
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/case/:id" 
-            element={
-              <ProtectedRoute>
-                <CaseSummary />
-              </ProtectedRoute>
-            } 
-          />
-        </Routes>
-      </div>
-    </Router>
-  );
+    return (
+        <AppProvider>
+            <Router>
+                <AppRoutes />
+            </Router>
+        </AppProvider>
+    );
 }
 
 export default App;
+

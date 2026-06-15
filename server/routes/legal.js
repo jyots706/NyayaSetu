@@ -1,8 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
-const { generateDraft } = require('../controllers/legalController');
+const { askLegalQuestion } = require('../controllers/legalController');
 
-router.post('/draft', protect, generateDraft);
+// @route   POST /api/legal/ask
+// @desc    Ask a legal question
+// @access  Private
+router.post('/ask', protect, askLegalQuestion);
 
 module.exports = router;

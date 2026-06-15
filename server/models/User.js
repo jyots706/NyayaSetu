@@ -5,8 +5,9 @@ const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    preferredLanguage: { type: String, default: 'en' },
-    role: { type: String, enum: ['citizen', 'lawyer', 'admin'], default: 'citizen' }
+    phone: { type: String },
+    preferredLanguage: { type: String, enum: ['Hindi', 'English', 'hindi', 'english'], default: 'English' },
+    role: { type: String, enum: ['user', 'admin'], default: 'user' }
 }, { timestamps: true });
 
 // Hash password before saving
@@ -17,7 +18,7 @@ userSchema.pre('save', async function(next) {
 });
 
 // Compare password method
-userSchema.methods.matchPassword = async function(enteredPassword) {
+userSchema.methods.comparePassword = async function(enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password);
 };
 

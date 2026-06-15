@@ -1,58 +1,76 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAppContext } from '../context/AppContext';
-import api from '../services/api';
+import { useNavigate, Link } from 'react-router-dom';
+import { registerUser } from '../services/api';
 
 const Register = () => {
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        password: '',
+        phone: '',
+        preferredLanguage: 'English'
+    });
     const [error, setError] = useState('');
-    const { login } = useAppContext();
     const navigate = useNavigate();
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
         try {
-            const { data } = await api.post('/auth/register', { name, email, password });
-            login(data);
-            navigate('/dashboard');
+            await registerUser(formData);
+            navigate('/login');
         } catch (err) {
-            setError(err.response?.data?.message || 'Registration failed');
+            setError(err.response?.data?.error || err.response?.data?.message || 'Registration failed');
         }
     };
 
     return (
-        <div className="glass-card" style={{ maxWidth: '400px', margin: '10vh auto' }}>
-            <h2 style={{ textAlign: 'center' }}>Create Account</h2>
-            {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
-            <form onSubmit={handleSubmit}>
-                <input 
-                    type="text" 
-                    className="input-field" 
-                    placeholder="Full Name" 
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required 
-                />
-                <input 
-                    type="email" 
-                    className="input-field" 
-                    placeholder="Email Address" 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required 
-                />
-                <input 
-                    type="password" 
-                    className="input-field" 
-                    placeholder="Password" 
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required 
-                />
-                <button type="submit" className="btn-primary" style={{ width: '100%' }}>Register</button>
-            </form>
+        <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
+                <div>
+                    <h2 className="text-center text-3xl font-extrabold text-blue-600">Create an account</h2>
+                </div>
+                {error && <div className="text-red-500 text-sm text-center">{error}</div>}
+                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+                    <div className="rounded-md shadow-sm space-y-4">
+                        <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Name</label>
+                            <input name="name" type="text" required className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500" onChange={handleChange} />
+                        </div>
+                        <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Email</label>
+                            <input name="email" type="email" required className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500" onChange={handleChange} />
+                        </div>
+                        <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Password</label>
+                            <input name="password" type="password" required className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500" onChange={handleChange} />
+                        </div>
+                        <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Phone</label>
+                            <input name="phone" type="text" className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500" onChange={handleChange} />
+                        </div>
+                        <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Preferred Language</label>
+                            <select name="preferredLanguage" value={formData.preferredLanguage} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                                <option value="English">English</option>
+                                <option value="Hindi">Hindi</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <button type="submit" className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none">
+                            Register
+                        </button>
+                    </div>
+                </form>
+                <div className="text-center">
+                    <p className="text-sm text-gray-600">Already have an account? <Link to="/login" className="text-blue-600 hover:underline">Login here</Link></p>
+                </div>
+            </div>
         </div>
     );
 };

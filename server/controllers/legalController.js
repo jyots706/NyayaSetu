@@ -1,25 +1,41 @@
-const { getLegalDraft } = require('../services/geminiService');
+const { getLegalGuidance } = require('../services/geminiService');
 const Case = require('../models/Case');
 
-const generateDraft = async (req, res) => {
+const askLegalQuestion = async (req, res) => {
     try {
-        const { caseId } = req.body;
-        if (!caseId) return res.status(400).json({ message: 'Case ID is required' });
+        // Accept both 'question' (from frontend) and 'query' (legacy)
+        const { question, query, language, category, title } = req.body;
+        const userQuery = question || query;
+        
+        if (!userQuery) {
+            return res.status(400).json({ error: 'Question is required' });
+        }
 
-        const currentCase = await Case.findById(caseId);
-        if (!currentCase) return res.status(404).json({ message: 'Case not found' });
+        // Get AI response from Gemini
+        const guidance = await getLegalGuidance(userQuery, language);
 
-        // Call Gemini
-        const draft = await getLegalDraft(currentCase);
+        // Save response to Case model
+        const newCase = new Case({
+            userId: req.user._id,
+            title: title || 'Legal Query',
+            description: userQuery,
+            category: category || 'RTI',
+            aiSummary: guidance,
+            language: language || 'english'
+        });
 
-        // Save draft to case
-        currentCase.legalDraft = draft;
-        await currentCase.save();
+        await newCase.save();
 
-        res.json({ message: 'Legal draft generated', draft });
+        res.status(201).json({
+            success: true,
+            answer: guidance,
+            guidance: guidance,
+            case: newCase
+        });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error("Error in askLegalQuestion:", error);
+        res.status(500).json({ error: 'Server error' });
     }
 };
 
-module.exports = { generateDraft };
+module.exports = { askLegalQuestion };

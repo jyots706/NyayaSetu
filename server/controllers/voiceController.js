@@ -1,28 +1,29 @@
 const { transcribeAudio } = require('../services/whisperService');
-const Case = require('../models/Case');
+const { getLegalGuidance } = require('../services/geminiService');
 
 const handleVoiceUpload = async (req, res) => {
     try {
-        if (!req.file) return res.status(400).json({ message: 'No audio file uploaded' });
-
-        // Call the Python Microservice to transcribe
-        const transcription = await transcribeAudio(req.file.path);
-
-        // Optionally associate with a case if caseId is provided
-        const { caseId } = req.body;
-        if (caseId) {
-            const currentCase = await Case.findById(caseId);
-            if (currentCase) {
-                currentCase.transcription = currentCase.transcription 
-                    ? currentCase.transcription + '\n' + transcription 
-                    : transcription;
-                await currentCase.save();
-            }
+        if (!req.file) {
+            return res.status(400).json({ error: 'No audio file uploaded' });
         }
 
-        res.json({ message: 'Transcription successful', transcription });
+        // Call whisperService to transcribe
+        const transcript = await transcribeAudio(req.file.path);
+
+        // Call geminiService for legal guidance on transcript
+        const language = req.body.language || 'English';
+        const legalResponse = await getLegalGuidance(transcript, language);
+
+        // Return both transcript and legal response as JSON
+        res.json({
+            transcription: transcript,
+            transcript: transcript, // backward compat
+            legalResponse: legalResponse
+        });
+
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error("Voice Controller Error:", error);
+        res.status(500).json({ error: 'Server error during voice processing' });
     }
 };
 

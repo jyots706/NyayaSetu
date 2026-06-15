@@ -21,7 +21,7 @@ const storage = multer.diskStorage({
 // Check File Type
 function checkFileType(file, cb) {
     // Allowed ext
-    const filetypes = /jpeg|jpg|png|pdf|doc|docx/;
+    const filetypes = /jpeg|jpg|png|pdf|doc|docx|mp3|wav|ogg|m4a/;
     // Check ext
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
     // Check mime
@@ -30,7 +30,7 @@ function checkFileType(file, cb) {
     if (mimetype && extname) {
         return cb(null, true);
     } else {
-        cb(new Error('Error: Images and Documents Only!'));
+        cb(new Error('Error: Images, Documents, and Audio Only!'));
     }
 }
 

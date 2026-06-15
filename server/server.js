@@ -1,6 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
 const connectDB = require('./config/db');
 
 const app = express();
@@ -10,8 +12,15 @@ connectDB();
 
 // Middleware
 app.use(cors());
+app.use(helmet());
+app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Health Check Route
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'success', message: 'NyayaSetu API is running healthy' });
+});
 
 // Basic Route
 app.get('/', (req, res) => {
@@ -27,13 +36,13 @@ const documentsRoutes = require('./routes/documents');
 
 // Use Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/voice', voiceRoutes);
-app.use('/api/translate', translateRoutes);
 app.use('/api/legal', legalRoutes);
 app.use('/api/documents', documentsRoutes);
+app.use('/api/voice', voiceRoutes);
+app.use('/api/translate', translateRoutes);
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`🚀 Server running on port ${PORT}`);
 });
