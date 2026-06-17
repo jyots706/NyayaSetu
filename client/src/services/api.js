@@ -25,9 +25,15 @@ export const loginUser = async (credentials) => {
     return response.data;
 };
 
-export const askLegalQuestion = async (queryData) => {
-    const response = await api.post('/legal/ask', queryData);
-    return response.data;
+export const askLegalQuestion = async (query, language) => {
+    const token = localStorage.getItem('token');
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const response = await axios.post(`${baseUrl}/legal/ask`, { query, language }, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+    return response.data.response;
 };
 
 export const uploadDocument = async (formData) => {

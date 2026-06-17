@@ -27,16 +27,17 @@ const AILegalHelpPage = () => {
         setIsLoading(true);
 
         try {
-            const data = await askLegalQuestion({ question: userMessage });
+            const answer = await askLegalQuestion(userMessage, 'english');
             setMessages(prev => [...prev, { 
                 role: 'ai', 
-                content: data.answer || data.message || "I couldn't process that request." 
+                content: answer || "I couldn't process that request." 
             }]);
         } catch (error) {
             console.error("Failed to get legal help:", error);
+            const errorMessage = error.response?.data?.error || "Sorry, I encountered an error while connecting to the AI service. Please try again.";
             setMessages(prev => [...prev, { 
                 role: 'ai', 
-                content: "Sorry, I encountered an error while connecting to the AI service. Please try again." 
+                content: errorMessage 
             }]);
         } finally {
             setIsLoading(false);
